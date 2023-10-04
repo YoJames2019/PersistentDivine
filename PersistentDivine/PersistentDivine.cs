@@ -1,5 +1,6 @@
 using Modding;
 using System;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace PersistentDivine
@@ -7,6 +8,9 @@ namespace PersistentDivine
     public class PersistentDivineMod : Mod
     {
         private static PersistentDivineMod? _instance;
+        private string? loadingScene;
+        private string? previousScene;
+        private bool overrideDivine;
 
         internal static PersistentDivineMod Instance
         {
@@ -25,33 +29,47 @@ namespace PersistentDivine
         public PersistentDivineMod() : base("PersistentDivine")
         {
             _instance = this;
+            overrideDivine = false;
         }
 
         public override void Initialize()
         {
             Log("Initializing");
 
-            UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneUnload;
+            ModHooks.GetPlayerBoolHook += OnGetPlayerBoolHook;
+            ModHooks.BeforeSceneLoadHook += BeforeSceneLoad;
 
             Log("Initialized");
         }
+        private bool OnGetPlayerBoolHook(string target, bool orig)
+        {
 
-        public void OnSceneUnload(Scene scf, Scene sct) {
-
-            PlayerData pd = PlayerData.instance;
-
-            if ((pd.legEaterLeft && pd.defeatedNightmareGrimm && pd.divineFinalConvo && !(scf.name == "Grimm_Divine" && sct.name == "Town")) || !pd.nightmareLanternLit)
+            if (target == "divineInTown")
             {
-                Log("Divine is nowhere to be found");
-                pd.divineInTown = false;
+                PlayerData pd = PlayerData.instance;
+                return !(
+                            (
+                                pd.GetBool("legEaterLeft") && 
+                                (
+                                    pd.GetBool("defeatedNightmareGrimm") || 
+                                    pd.GetBool("destroyedNightmareLantern")
+                                ) && 
+                                pd.GetBool("divineFinalConvo") && 
+                                !(
+                                    previousScene == "Grimm_Divine" && 
+                                    loadingScene == "Town"
+                                 )
+                            ) || 
+                            !pd.GetBool("nightmareLanternLit")
+                       ) || overrideDivine;
             }
-            else
-            {
-                Log("The lantern was lit, and the Divine quest not complete, Divine will stay");
-                pd.divineInTown = true;
-            }
-
+            return orig;
         }
-
+        private string BeforeSceneLoad(string scName)
+        {
+            previousScene = loadingScene;
+            loadingScene = scName;
+            return scName;
+        }
     }
 }
