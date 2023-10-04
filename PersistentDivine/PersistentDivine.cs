@@ -10,7 +10,6 @@ namespace PersistentDivine
         private static PersistentDivineMod? _instance;
         private string? loadingScene;
         private string? previousScene;
-        private bool overrideDivine;
 
         internal static PersistentDivineMod Instance
         {
@@ -29,7 +28,6 @@ namespace PersistentDivine
         public PersistentDivineMod() : base("PersistentDivine")
         {
             _instance = this;
-            overrideDivine = false;
         }
 
         public override void Initialize()
@@ -49,19 +47,19 @@ namespace PersistentDivine
                 PlayerData pd = PlayerData.instance;
                 return !(
                             (
-                                pd.GetBool("legEaterLeft") && 
+                                pd.GetBool("legEaterLeft") &&
                                 (
-                                    pd.GetBool("defeatedNightmareGrimm") || 
+                                    pd.GetBool("defeatedNightmareGrimm") ||
                                     pd.GetBool("destroyedNightmareLantern")
-                                ) && 
-                                pd.GetBool("divineFinalConvo") && 
+                                ) &&
+                                pd.GetBool("divineFinalConvo") &&
                                 !(
-                                    previousScene == "Grimm_Divine" && 
+                                    previousScene == "Grimm_Divine" &&
                                     loadingScene == "Town"
                                  )
-                            ) || 
+                            ) ||
                             !pd.GetBool("nightmareLanternLit")
-                       ) || overrideDivine;
+                       );
             }
             return orig;
         }
