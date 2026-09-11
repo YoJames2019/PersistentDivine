@@ -45,21 +45,22 @@ namespace PersistentDivine
             if (target == "divineInTown")
             {
                 PlayerData pd = PlayerData.instance;
-                return !(
-                            (
-                                pd.GetBool("legEaterLeft") &&
-                                (
-                                    pd.GetBool("defeatedNightmareGrimm") ||
-                                    pd.GetBool("destroyedNightmareLantern")
-                                ) &&
-                                pd.GetBool("divineFinalConvo") &&
-                                !(
-                                    previousScene == "Grimm_Divine" &&
-                                    loadingScene == "Town"
-                                 )
-                            ) ||
-                            !pd.GetBool("nightmareLanternLit")
-                       );
+
+                bool nightmareLanternLit = pd.GetBool("nightmareLanternLit");
+
+                bool completedQuest = pd.GetBool("defeatedNightmareGrimm") || pd.GetBool("destroyedNightmareLantern");
+                bool finishedMiscDivineLoreInteractions = pd.GetBool("legEaterLeft") && pd.GetBool("divineFinalConvo");
+                bool completedAllDivineInteractions = completedQuest && finishedMiscDivineLoreInteractions;
+
+                // to make sure divines tent doesnt just poof out of existence
+                // as soon as we leave the tent after having the final convo
+                bool loadingTownFromDivine = previousScene == "Grimm_Divine" && loadingScene == "Town";
+
+                // if we've started the grimm troupe quest and we haven't completed all divine interactions
+                // or we're loading into the town from divine
+                bool shouldShowDivine = (nightmareLanternLit && !completedAllDivineInteractions) || loadingTownFromDivine;
+
+                return shouldShowDivine;
             }
             return orig;
         }
